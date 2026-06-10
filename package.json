@@ -1,0 +1,44 @@
+{
+  "name": "nodejstesttsx",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node -r tsconfig-paths/register dist/index.js",
+    "start:dev": "ts-node-dev -r tsconfig-paths/register --respawn --transpile-only src/index.ts",
+    "test": "jest --runInBand",
+    "migrate:create": "migrate-mongo create",
+    "migrate:up": "migrate-mongo up",
+    "migrate:down": "migrate-mongo down",
+    "migrate:status": "migrate-mongo status"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SvyatS/NodeJsTestTsx.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SvyatS/NodeJsTestTsx/issues"
+  },
+  "homepage": "https://github.com/SvyatS/NodeJsTestTsx#readme",
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.9.3",
+    "migrate-mongo": "^14.0.7",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^6.0.3"
+  },
+  "dependencies": {
+    "ajv": "^8.20.0",
+    "decimal.js": "^10.6.0",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "mongoose": "^9.7.0",
+    "redis": "^6.0.0",
+    "uuid": "^14.0.0"
+  }
+}

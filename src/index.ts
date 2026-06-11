@@ -1,18 +1,19 @@
-import * as dotenv from 'dotenv';
-dotenv.config();
-// import 'tsconfig-paths/register';
+import config from '#/config';
+import MongoInstance from '#/libs/Mongoose';
+import RedisInstance from '#/libs/Redis';
 
 import { app } from '#/app';
 
-const PORT = process.env.PORT || 3000;
-
 async function startServer() {
   try {
-    const server = app.listen(PORT, () => {
-      console.log(`Server is running on port: ${PORT}`);
+    MongoInstance.connect(config.MONGO_URL);
+    RedisInstance.connect(config.REDIS_URL);
+
+    const server = app.listen(config.PORT, () => {
+      console.log(`Server is running on port: ${config.PORT}`);
     });
 
-    // setupGracefulShutdown(server);
+    setupGracefulShutdown(server);
 
   } catch (error) {
     console.error('Failed to start server: ', error);
@@ -20,43 +21,39 @@ async function startServer() {
   }
 }
 
-/**
- * Обеспечивает корректное завершение работы (Graceful Shutdown)
- * Позволяет дообработать текущие запросы и закрыть соединения с БД
- */
 function setupGracefulShutdown(server: any) {
-  const shutdown = async (signal: string) => {
-    console.log(`\n⚠️  ${signal} received. Shutting down gracefully...`);
-    
-    // Перестаем принимать новые соединения
-    server.close(async () => {
-      console.log('server closed');
-      
-      try {
-        process.exit(0);
-      } catch (err) {
-        console.error('Error during shutdown:', err);
-        process.exit(1);
-      }
-    });
 
-    setTimeout(() => {
-      console.error('Could not close connections in time');
+  const forceExitTimeout = setTimeout(() => {
+    console.error('Shutdown timed out. Forcing process exit.');
+    process.exit(1);
+  }, 10000);
+
+  const shutdown = async (signal: string) => {
+    console.log(`${signal} received. Shutting down gracefully...`);
+    
+    try {
+      await new Promise<void>((resolve, reject) => {
+        server.close((err: any) => {
+          if (err) return reject(err);
+          console.log('HTTP server closed. No active requests remaining.');
+          resolve();
+        });
+      });
+
+      MongoInstance.disconnect();
+      RedisInstance.disconnect();
+
+      clearTimeout(forceExitTimeout);
+
+      process.exit(0);
+    } catch (error) {
+      clearTimeout(forceExitTimeout);
       process.exit(1);
-    }, 10000);
-  };
+    }
+  }
 
   process.on('SIGTERM', () => shutdown('SIGTERM'));
   process.on('SIGINT', () => shutdown('SIGINT'));
-}
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-});
-
-process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception thrown:', error);
-  process.exit(1);
-});
+};
 
 startServer();

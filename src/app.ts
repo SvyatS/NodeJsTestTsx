@@ -1,14 +1,9 @@
 import express, { Application } from 'express';
+import { router as Router } from '#/api/routes';
+import { errorHandler } from '#/api/middlewares/errorHandler';
 
 export const app: Application = express();
 
 app.use(express.json());
-
-app.post('/invoice', async (req, res, next) => {
-  try {
-    return res.status(201).json({ ok: true, message: 'Invoice created' });
-  } catch (error) {
-    return res.status(201).json({ ok: false, message: 'Invoice not created' });
-  }
-});
-
+app.use('', Router)
+app.use(errorHandler)
